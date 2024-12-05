@@ -63,20 +63,39 @@ public class ConfigBuilder
                                 apiKey = Encoding.Default.GetString(secret.Data[secretParts[2]]);
                             }
 
-                            var port = path.Backend.Service.Port.Number;
-
-                            if (port == null)
+                            string? username = null;
+                            string? password = null;
+                            var userNamePasswordSecretName = Get(ingress, AnnotationKey.WidgetUsernamePasswordSecret);
+                            if (!string.IsNullOrEmpty(userNamePasswordSecretName))
                             {
-                                var service = await _kubeClientObject.CoreV1.ReadNamespacedServiceAsync(
-                                    path.Backend.Service.Name,
-                                    ingress.Metadata.NamespaceProperty, cancellationToken: token);
-                                port = service.Spec.Ports.Single(p => p.Name == path.Backend.Service.Port.Name)
-                                    .Port;
+                                var secretParts = userNamePasswordSecretName.Split('/');
+                                var secret = await _kubeClientObject.CoreV1.ReadNamespacedSecretAsync(secretParts[1],
+                                    secretParts[0], cancellationToken: token);
+                                username = Encoding.Default.GetString(secret.Data["username"]);
+                                password = Encoding.Default.GetString(secret.Data["password"]);
                             }
 
+                            if (Get(ingress, AnnotationKey.WidgetUrl) is not { } widgetUrl)
+                            {
+                                var port = path.Backend.Service.Port.Number;
+
+                                if (port == null)
+                                {
+                                    var service = await _kubeClientObject.CoreV1.ReadNamespacedServiceAsync(
+                                        path.Backend.Service.Name,
+                                        ingress.Metadata.NamespaceProperty, cancellationToken: token);
+                                    port = service.Spec.Ports.Single(p => p.Name == path.Backend.Service.Port.Name)
+                                        .Port;
+                                }
+                                widgetUrl = $"http://{path.Backend.Service.Name}.{ingress.Metadata.NamespaceProperty}.svc.cluster.local:{port}";
+                            }
+
+
                             widget = new Widget(widgetType,
-                                $"http://{path.Backend.Service.Name}.{ingress.Metadata.NamespaceProperty}.svc.cluster.local:{port}",
-                                apiKey);
+                                widgetUrl,
+                                apiKey,
+                                username,
+                                password);
                         }
 
                         var target = Get(ingress, AnnotationKey.Target);
