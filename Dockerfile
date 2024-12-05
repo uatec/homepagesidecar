@@ -10,8 +10,8 @@ RUN dotnet test
 WORKDIR /src/HomepageSC
 RUN dotnet publish -a $TARGETARCH --no-restore -c Release -o /app
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0-jammy-chiseled-extra
+FROM mcr.microsoft.com/dotnet/runtime-deps:8.0-noble-chiseled-extra
 WORKDIR /app
 
-COPY --link --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "./HomepageSC.dll"]
+COPY --link --from=publish /app .
+ENTRYPOINT ["./HomepageSC"]

@@ -9,7 +9,7 @@
         <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
         <PublishSelfContained>true</PublishSelfContained>
         <PublishSingleFile>true</PublishSingleFile>
-        <PublishTrimmed>true</PublishTrimmed>
+        <PublishTrimmed>false</PublishTrimmed>
         <PublishReadyToRun>true</PublishReadyToRun>
     </PropertyGroup>
 
