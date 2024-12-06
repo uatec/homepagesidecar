@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS publish
+﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS publish
 ARG TARGETARCH
 WORKDIR /src
 COPY --link . .
@@ -10,7 +10,7 @@ RUN dotnet test
 WORKDIR /src/HomepageSC
 RUN dotnet publish -a $TARGETARCH --no-restore -c Release -o /app
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:8.0-noble-chiseled-extra
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/runtime-deps:8.0-noble-chiseled-extra
 WORKDIR /app
 
 COPY --link --from=publish /app .
