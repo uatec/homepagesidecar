@@ -32,6 +32,7 @@ public class Controller : BackgroundService
 
             var serializer = new SerializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
                 .Build();
             var configOutput = serializer.Serialize(c);
 
