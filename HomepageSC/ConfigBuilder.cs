@@ -132,7 +132,7 @@ public class ConfigBuilder(IKubernetes kubeClientObject, IOptions<SidecarOptions
         $"{ingress.Metadata.Name}{(path?.Path.Trim('/') is {Length: > 0} p ? $"/{p}" : string.Empty)}";
 
     private static string? GetAnnotationValue(Func<string?, string> annotationFunc, V1Ingress ingress, V1HTTPIngressPath? path) =>
-        Get(ingress, annotationFunc($"{path?.Backend.Service.Name}:{path?.Backend.Service.Port.Number}"));
+        Get(ingress, annotationFunc(path == null ? null : $"{path.Backend.Service.Name}:{path.Backend.Service.Port.Number}"));
 
     private static string? Get(V1Ingress ingress, string attributeName)
     {
