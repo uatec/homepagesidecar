@@ -63,7 +63,7 @@ namespace HomepageSC.Tests.Service
             var kubeClient = new Mock<IKubernetes>(MockBehavior.Default);
             var configBuilder =
                 new ConfigBuilder(kubeClient.Object, new OptionsWrapper<SidecarOptions>(new SidecarOptions()));
-            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Group] = "Some Other Group";
+            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Group()] = "Some Other Group";
             var config = await configBuilder.Build(ingressData, CancellationToken.None);
             config["Some Other Group"]["my-ingress"].Href.Should()
                 .Be("http://my-host.com/my-path", "Should construct the the full path");
@@ -75,7 +75,7 @@ namespace HomepageSC.Tests.Service
             var kubeClient = new Mock<IKubernetes>(MockBehavior.Default);
             var configBuilder =
                 new ConfigBuilder(kubeClient.Object, new OptionsWrapper<SidecarOptions>(new SidecarOptions()));
-            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.AppName] = "Some Different Name";
+            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.AppName()] = "Some Different Name";
             var config = await configBuilder.Build(ingressData, CancellationToken.None);
             config["Default"]["Some Different Name"].Href.Should()
                 .Be("http://my-host.com/my-path", "Should construct the the full path");
@@ -87,7 +87,7 @@ namespace HomepageSC.Tests.Service
             var kubeClient = new Mock<IKubernetes>(MockBehavior.Default);
             var configBuilder =
                 new ConfigBuilder(kubeClient.Object, new OptionsWrapper<SidecarOptions>(new SidecarOptions()));
-            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Icon] = "http://awesomeicons.local/some-icon.png";
+            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Icon()] = "http://awesomeicons.local/some-icon.png";
             var config = await configBuilder.Build(ingressData, CancellationToken.None);
             config["Default"]["my-ingress"].Icon.Should()
                 .Be("http://awesomeicons.local/some-icon.png", "Should populate icon from annotation");
@@ -99,7 +99,7 @@ namespace HomepageSC.Tests.Service
             var kubeClient = new Mock<IKubernetes>(MockBehavior.Default);
             var configBuilder =
                 new ConfigBuilder(kubeClient.Object, new OptionsWrapper<SidecarOptions>(new SidecarOptions()));
-            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Description] = "An awesome and interesting description";
+            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Description()] = "An awesome and interesting description";
             var config = await configBuilder.Build(ingressData, CancellationToken.None);
             config["Default"]["my-ingress"].Description.Should()
                 .Be("An awesome and interesting description", "Should populate icon from annotation");
@@ -111,7 +111,7 @@ namespace HomepageSC.Tests.Service
             var kubeClient = new Mock<IKubernetes>(MockBehavior.Default);
             var configBuilder =
                 new ConfigBuilder(kubeClient.Object, new OptionsWrapper<SidecarOptions>(new SidecarOptions()));
-            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Healthcheck] = "http://service.namespace.svc.cluster.local";
+            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Healthcheck()] = "http://service.namespace.svc.cluster.local";
             var config = await configBuilder.Build(ingressData, CancellationToken.None);
             config["Default"]["my-ingress"].Ping.Should()
                 .Be("http://service.namespace.svc.cluster.local", "Should populate ping from healthcheck annotation");
@@ -133,7 +133,7 @@ namespace HomepageSC.Tests.Service
             config["Default"]["my-ingress"].Href.Should()
                 .Be($"https://{secureHost}/my-path", "Should construct an https path");
         }
-        
+
         [Test]
         public async Task MultiplePaths()
         {
@@ -142,26 +142,36 @@ namespace HomepageSC.Tests.Service
                 new ConfigBuilder(kubeClient.Object, new OptionsWrapper<SidecarOptions>(new SidecarOptions()));
             ingressData.Items = new List<V1Ingress>
             {
-                new V1Ingress {
+                new V1Ingress
+                {
                     Metadata = new V1ObjectMeta
                     {
                         Name = "some-ingress",
                         Annotations = new Dictionary<string, string>()
                     },
-                    Spec = new V1IngressSpec {
-                        Rules = new List<V1IngressRule> {
-                            new V1IngressRule {
+                    Spec = new V1IngressSpec
+                    {
+                        Rules = new List<V1IngressRule>
+                        {
+                            new V1IngressRule
+                            {
                                 Host = "some-host.com",
-                                Http = new V1HTTPIngressRuleValue {
-                                    Paths = new List<V1HTTPIngressPath> {
-                                        new V1HTTPIngressPath {
-                                            Backend = new V1IngressBackend {
+                                Http = new V1HTTPIngressRuleValue
+                                {
+                                    Paths = new List<V1HTTPIngressPath>
+                                    {
+                                        new V1HTTPIngressPath
+                                        {
+                                            Backend = new V1IngressBackend
+                                            {
                                                 Service = new V1IngressServiceBackend("my-service", new V1ServiceBackendPort(number: 80))
                                             },
                                             Path = "/"
                                         },
-                                        new V1HTTPIngressPath {
-                                            Backend = new V1IngressBackend {
+                                        new V1HTTPIngressPath
+                                        {
+                                            Backend = new V1IngressBackend
+                                            {
                                                 Service = new V1IngressServiceBackend("my-service", new V1ServiceBackendPort(number: 80))
                                             },
                                             Path = "/sub-path"
@@ -175,13 +185,12 @@ namespace HomepageSC.Tests.Service
             };
 
             var config = await configBuilder.Build(ingressData, CancellationToken.None);
-            config["Default"]["some-ingress"].Href.Should()
+            config.Should().ContainKey("Default").WhoseValue.Should().ContainKey("some-ingress").WhoseValue.Href.Should()
                 .Be($"http://some-host.com/", "Should create a service for the first path");
-            
-            config["Default"]["some-ingress-1"].Href.Should()
+            config.Should().ContainKey("Default").WhoseValue.Should().ContainKey("some-ingress/sub-path").WhoseValue.Href.Should()
                 .Be($"http://some-host.com/sub-path", "Should create a service for the second path");
         }
-        
+
         [Test]
         public async Task TargetEmptyByDefault()
         {
@@ -208,7 +217,7 @@ namespace HomepageSC.Tests.Service
             var kubeClient = new Mock<IKubernetes>(MockBehavior.Default);
             var configBuilder =
                 new ConfigBuilder(kubeClient.Object, new OptionsWrapper<SidecarOptions>(new SidecarOptions { DefaultTarget = Target._top}));
-            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Target] = "_self";
+            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Target()] = "_self";
             var config = await configBuilder.Build(ingressData, CancellationToken.None);
             config["Default"]["my-ingress"].Target.Should().Be("_self");
         }
@@ -219,7 +228,7 @@ namespace HomepageSC.Tests.Service
             var kubeClient = new Mock<IKubernetes>(MockBehavior.Default);
             var configBuilder =
                 new ConfigBuilder(kubeClient.Object, new OptionsWrapper<SidecarOptions>(new SidecarOptions{IncludeByDefault =  false}));
-            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Enable] = "true";
+            ingressData.Items.Single().Metadata.Annotations[AnnotationKey.Enable()] = "true";
             var config = await configBuilder.Build(ingressData, CancellationToken.None);
             config["Default"]["my-ingress"].Href.Should().NotBeEmpty();
         }
