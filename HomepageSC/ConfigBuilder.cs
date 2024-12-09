@@ -135,7 +135,7 @@ public class ConfigBuilder(IKubernetes kubeClientObject, IOptions<SidecarOptions
     {
         var annotation = annotationFunc(path?.Path);
         var val = Get(ingress, annotation);
-        Console.WriteLine($"Ingress: {ingress.Metadata.Name}, path: {path.Path}, Annotation: {annotation}, Value: {val}");
+        Console.WriteLine($"Ingress: {ingress?.Metadata?.Name}, path: {path?.Path ?? "<null>"}, Annotation: {annotation}, Value: {val}");
         return val;
     }
 
